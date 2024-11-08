@@ -1,37 +1,71 @@
 package com.udea.firstkotlinmultiplatformkmp
-
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material.Button
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import org.jetbrains.compose.resources.painterResource
-import org.jetbrains.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 
-import firstkotlinmultiplatform.composeapp.generated.resources.Res
-import firstkotlinmultiplatform.composeapp.generated.resources.compose_multiplatform
 
 @Composable
-@Preview
 fun App() {
-    MaterialTheme {
-        var showContent by remember { mutableStateOf(false) }
-        Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-            Button(onClick = { showContent = !showContent }) {
-                Text("Click me!")
+    val navController = rememberNavController()
+    NavHost(navController = navController, startDestination = "app") {
+        composable("App") { RunApp(navController = navController) }
+        composable("Screen2/{name}") { backStackEntry ->
+            val name = backStackEntry.arguments?.getString("name") ?: ""
+            Screen2(name = name, navController = navController)
+        }
+    }
+}
+
+@Composable
+fun RunApp(navController: NavController) {
+    var name by remember { mutableStateOf(TextFieldValue("")) }
+    var errorMessage by remember { mutableStateOf("") }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(text = "Enter your name", style = MaterialTheme.typography.h6)
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        TextField(
+            value = name,
+            onValueChange = {
+                name = it
+                errorMessage = ""
+            },
+            modifier = Modifier.width(200.dp)
+        )
+
+        if (errorMessage.isNotEmpty()) {
+            Text(
+                text = errorMessage,
+                color = MaterialTheme.colors.error,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(onClick = {
+            if (name.text.isNotBlank()) {
+                navController.navigate("screen2/${name.text}")
+            } else {
+                errorMessage = "The name field cannot be empty"
             }
-            AnimatedVisibility(showContent) {
-                val greeting = remember { Greeting().greet() }
-                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Image(painterResource(Res.drawable.compose_multiplatform), null)
-                    Text("Compose: $greeting")
-                }
-            }
+        }) {
+            Text(text = "Click me")
         }
     }
 }
